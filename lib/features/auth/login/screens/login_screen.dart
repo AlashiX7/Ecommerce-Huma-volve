@@ -1,10 +1,12 @@
 
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
 import '../../../main_navigation/screens/main_navigation_screen.dart';
+import '../services/login_service.dart';
 import '../../sign_up/screens/sign_up_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -18,11 +20,15 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  bool isLoading = false;
+  String? credentialError;
 
   @override
   void initState() {
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    emailController.addListener(_clearCredentialError);
+    passwordController.addListener(_clearCredentialError);
 
     super.initState();
   }
@@ -91,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     if (value.length < 6) {
                       return 'Password must be at least 6 characters';
                     }
-                    return null;
+                    return credentialError;
                   },
                 ),
                 const SizedBox(height: 16),
@@ -108,15 +114,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 32),
                 PrimaryButton(
                   text: 'Login',
-                  onPressed: () {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) => MainNavigationScreen(),
-                        ),
-                      );
-                    }
-                  },
+                  isLoading: isLoading,
+                  onPressed: isLoading ? () {} : _login,
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -164,5 +163,75 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _login() async {
+    credentialError = null;
+
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      await LoginService().login(
+        emailController.text,
+        passwordController.text,
+      );
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => MainNavigationScreen(),
+        ),
+      );
+    } on DioException catch (error) {
+      if (!mounted) return;
+
+      if (error.response?.statusCode == 401) {
+        setState(() {
+          credentialError = 'Invalid email or password';
+        });
+        _formKey.currentState?.validate();
+      } else {
+        final statusCode = error.response?.statusCode;
+        final message = statusCode == null
+            ? 'Unable to connect. Check your internet connection and try again.'
+            : statusCode >= 500
+            ? 'The server is temporarily unavailable. Please try again later.'
+            : 'Login could not be completed. Please try again.';
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Something went wrong. Please try again.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _clearCredentialError() {
+    if (credentialError == null) return;
+
+    setState(() {
+      credentialError = null;
+    });
+    _formKey.currentState?.validate();
   }
 }

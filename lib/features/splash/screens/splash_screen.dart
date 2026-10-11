@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/theme.dart';
 import '../../auth/login/screens/login_screen.dart';
 
@@ -17,12 +18,19 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigateToNext() async {
+    print('Splash: waiting started');
+
     await Future.delayed(const Duration(seconds: 2));
+    print('Splash: waiting finished');
+
     if (mounted) {
+      print('Splash: navigating to LoginScreen');
+
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const LoginScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },
@@ -39,31 +47,21 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.shopping_bag,
-              size: 120,
-              color: AppTheme.primary,
-            ),
+            Icon(Icons.shopping_bag, size: 120, color: AppTheme.primary),
             const SizedBox(height: 24),
             Text(
               'Huma-volve',
-              style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                fontSize: 40,
-                color: AppTheme.primary,
-              ),
+              style: Theme.of(context).textTheme.displayLarge
+                  ?.copyWith(fontSize: 40, color: AppTheme.primary),
             ),
             const SizedBox(height: 8),
             Text(
               'Your Ultimate E-Commerce App',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontSize: 16,
-                color: Colors.grey.shade600,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(fontSize: 16, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 48),
-            CircularProgressIndicator(
-              color: AppTheme.primary,
-            ),
+            CircularProgressIndicator(color: AppTheme.primary),
           ],
         ),
       ),
