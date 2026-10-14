@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/dummy_data.dart';
 import '../../../core/theme.dart';
+import '../../home/domain/entities/product.dart';
 import '../widgets/color_selector.dart';
 import '../widgets/size_selector.dart';
 import '../../../core/widgets/primary_button.dart';
@@ -22,8 +22,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedColor = widget.product.colors.first;
-    _selectedSize = widget.product.sizes.first;
+    _selectedColor = Colors.black;
+    _selectedSize = 'One Size';
   }
 
   @override
@@ -131,7 +131,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                     const SizedBox(height: 12),
                     ColorSelector(
-                      colors: widget.product.colors,
+                      colors: const [Colors.black],
                       selectedColor: _selectedColor,
                       onColorSelected: (color) {
                         setState(() {
@@ -147,7 +147,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                     const SizedBox(height: 12),
                     SizeSelector(
-                      sizes: widget.product.sizes,
+                      sizes: const ['One Size'],
                       selectedSize: _selectedSize,
                       onSizeSelected: (size) {
                         setState(() {

@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'core/network/api_client.dart';
 import 'core/theme.dart';
+import 'features/auth/data/datasources/auth_remote_data_source.dart';
+import 'features/auth/data/repositories/auth_repository_impl.dart';
+import 'features/auth/domain/repositories/auth_repository.dart';
+import 'features/home/data/datasources/home_remote_data_source.dart';
+import 'features/home/data/repositories/home_repository_impl.dart';
+import 'features/home/domain/repositories/home_repository.dart';
 import 'features/splash/screens/splash_screen.dart';
 
 void main() {
@@ -12,11 +20,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'E-Commerce App',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      home: const SplashScreen(),
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider<AuthRepository>(
+          create: (_) =>
+              AuthRepositoryImpl(AuthRemoteDataSource(ApiClient.dio)),
+        ),
+        RepositoryProvider<HomeRepository>(
+          create: (_) =>
+              HomeRepositoryImpl(HomeRemoteDataSource(ApiClient.dio)),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'E-Commerce App',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        home: const SplashScreen(),
+      ),
     );
   }
 }
