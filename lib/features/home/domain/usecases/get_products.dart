@@ -6,5 +6,6 @@ class GetProducts {
 
   const GetProducts(this.repository);
 
-  Future<List<Product>> call() => repository.getProducts();
+  Future<List<Product>> call({required int limit, required int offset}) =>
+      repository.getProducts(limit: limit, offset: offset);
 }

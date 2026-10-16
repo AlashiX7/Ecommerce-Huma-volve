@@ -27,145 +27,209 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _HomeContent extends StatelessWidget {
+class _HomeContent extends StatefulWidget {
   const _HomeContent();
 
   @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<HomeCubit, HomeStates>(
-      builder: (context, state) {
-        final categories = state.categories;
-        final selectedId = state.selectedCategory?.id;
-        final returnedLabels = categories
-            .map((category) => category.displayName.toLowerCase())
-            .toSet();
-        final missingLabels = <String>[
-          if (!returnedLabels.contains('shoes')) 'Shoes',
-          if (!returnedLabels.contains('clothing')) 'Clothing',
-          if (!returnedLabels.contains('accessories')) 'Accessories',
-          if (!returnedLabels.contains('electronics')) 'Electronics',
-        ];
+  State<_HomeContent> createState() => _HomeContentState();
+}
 
-        return Scaffold(
-          backgroundColor: AppTheme.background,
-          body: SafeArea(
-            child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey.withValues(alpha: 0.1),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
+class _HomeContentState extends State<_HomeContent> {
+  static const double _loadMoreThreshold = 500;
+  final ScrollController _scrollController = ScrollController();
+  bool _autoLoadScheduled = false;
+  int? _lastSelectedCategoryId;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.hasClients &&
+        _scrollController.position.extentAfter <= _loadMoreThreshold) {
+      context.read<HomeCubit>().loadNextProductsPage();
+    }
+  }
+
+  void _scheduleUnderfilledLoad(ProductsSuccess state) {
+    if (!state.hasMore ||
+        state.isLoadingMore ||
+        state.pageError != null ||
+        _autoLoadScheduled) {
+      return;
+    }
+    _autoLoadScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _autoLoadScheduled = false;
+      if (_scrollController.hasClients &&
+          _scrollController.position.extentAfter <= _loadMoreThreshold) {
+        context.read<HomeCubit>().loadNextProductsPage();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<HomeCubit, HomeStates>(
+      listener: (context, state) {
+        final categoryId = state.selectedCategory?.id;
+        if (categoryId != null &&
+            _lastSelectedCategoryId != null &&
+            categoryId != _lastSelectedCategoryId &&
+            _scrollController.hasClients) {
+          _scrollController.jumpTo(0);
+        }
+        if (categoryId != null) _lastSelectedCategoryId = categoryId;
+      },
+      child: BlocBuilder<HomeCubit, HomeStates>(
+        builder: (context, state) {
+          if (state is ProductsSuccess) _scheduleUnderfilledLoad(state);
+          final categories = state.categories;
+          final selectedId = state.selectedCategory?.id;
+          final returnedLabels = categories
+              .map((category) => category.displayName.toLowerCase())
+              .toSet();
+          final missingLabels = <String>[
+            if (!returnedLabels.contains('shoes')) 'Shoes',
+            if (!returnedLabels.contains('clothing')) 'Clothing',
+            if (!returnedLabels.contains('accessories')) 'Accessories',
+            if (!returnedLabels.contains('electronics')) 'Electronics',
+          ];
+
+          return Scaffold(
+            backgroundColor: AppTheme.background,
+            body: SafeArea(
+              child: CustomScrollView(
+                controller: _scrollController,
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withValues(alpha: 0.1),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.menu,
+                                  color: AppTheme.primary,
+                                ),
                               ),
-                              child: const Icon(
-                                Icons.menu,
-                                color: AppTheme.primary,
-                              ),
-                            ),
-                            CircleAvatar(
-                              radius: 24,
-                              backgroundImage: NetworkImage(
-                                dummyUser.profilePictureUrl,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-                        Text(
-                          'Explore',
-                          style: Theme.of(context).textTheme.displayLarge
-                              ?.copyWith(fontSize: 36),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Best trendy collection!',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(fontSize: 18),
-                        ),
-                        const SizedBox(height: 32),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withValues(alpha: 0.05),
-                                blurRadius: 15,
-                                offset: const Offset(0, 5),
+                              CircleAvatar(
+                                radius: 24,
+                                backgroundImage: NetworkImage(
+                                  dummyUser.profilePictureUrl,
+                                ),
                               ),
                             ],
                           ),
-                          child: TextField(
-                            decoration: InputDecoration(
-                              hintText: 'Search clothes...',
-                              hintStyle: TextStyle(color: Colors.grey.shade400),
-                              prefixIcon: const Icon(
-                                Icons.search,
-                                color: Colors.grey,
-                              ),
-                              suffixIcon: Container(
-                                margin: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.primary,
-                                  borderRadius: BorderRadius.circular(8),
+                          const SizedBox(height: 32),
+                          Text(
+                            'Explore',
+                            style: Theme.of(context).textTheme.displayLarge
+                                ?.copyWith(fontSize: 36),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Best trendy collection!',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(fontSize: 18),
+                          ),
+                          const SizedBox(height: 32),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withValues(alpha: 0.05),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 5),
                                 ),
-                                child: const Icon(
-                                  Icons.tune,
-                                  color: Colors.white,
-                                  size: 20,
+                              ],
+                            ),
+                            child: TextField(
+                              decoration: InputDecoration(
+                                hintText: 'Search clothes...',
+                                hintStyle: TextStyle(
+                                  color: Colors.grey.shade400,
                                 ),
+                                prefixIcon: const Icon(
+                                  Icons.search,
+                                  color: Colors.grey,
+                                ),
+                                suffixIcon: Container(
+                                  margin: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primary,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.tune,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                                border: InputBorder.none,
                               ),
-                              border: InputBorder.none,
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 32),
-                        SizedBox(
-                          height: 44,
-                          child: _buildCategorySelector(
-                            context,
-                            state,
-                            categories,
-                            selectedId,
+                          const SizedBox(height: 32),
+                          SizedBox(
+                            height: 44,
+                            child: _buildCategorySelector(
+                              context,
+                              state,
+                              categories,
+                              selectedId,
+                            ),
                           ),
-                        ),
-                        if (categories.isNotEmpty &&
-                            missingLabels.isNotEmpty) ...[
-                          const SizedBox(height: 10),
-                          Text(
-                            '${missingLabels.join(' and ')} ${missingLabels.length == 1 ? 'is' : 'are'} not currently available from the API.',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: AppTheme.textSecondary),
-                          ),
+                          if (categories.isNotEmpty &&
+                              missingLabels.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            Text(
+                              '${missingLabels.join(' and ')} ${missingLabels.length == 1 ? 'is' : 'are'} not currently available from the API.',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: AppTheme.textSecondary),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
-                ),
-                ..._buildProductContent(context, state),
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
-              ],
+                  ..._buildProductContent(context, state),
+                  const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
@@ -308,9 +372,46 @@ class _HomeContent extends StatelessWidget {
             ),
           ),
         ),
+        SliverToBoxAdapter(child: _buildPaginationFooter(context, state)),
       ];
     }
 
     return const [SliverToBoxAdapter(child: SizedBox.shrink())];
+  }
+
+  Widget _buildPaginationFooter(BuildContext context, ProductsSuccess state) {
+    if (state.isLoadingMore) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+    if (state.pageError != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          children: [
+            Text(state.pageError!, textAlign: TextAlign.center),
+            TextButton(
+              onPressed: () => context.read<HomeCubit>().retryProducts(),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+    if (!state.hasMore) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(child: Text('You have seen all products.')),
+      );
+    }
+    return const SizedBox(height: 24);
   }
 }

@@ -40,10 +40,17 @@ class ProductsLoading extends HomeStates {
 }
 
 class ProductsSuccess extends HomeStates {
+  final bool hasMore;
+  final bool isLoadingMore;
+  final String? pageError;
+
   const ProductsSuccess({
     required super.categories,
     required super.selectedCategory,
     required super.products,
+    this.hasMore = false,
+    this.isLoadingMore = false,
+    this.pageError,
   });
 }
 

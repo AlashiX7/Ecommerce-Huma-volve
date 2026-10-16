@@ -28,10 +28,13 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
-  Future<List<Product>> getProducts() async {
+  Future<List<Product>> getProducts({
+    required int limit,
+    required int offset,
+  }) async {
     try {
       return _asList(
-        await remoteDataSource.getProducts(),
+        await remoteDataSource.getProducts(limit: limit, offset: offset),
         'products',
       ).map((json) => ProductModel.fromJson(json).toEntity()).toList();
     } on DioException catch (error) {
@@ -42,10 +45,18 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
-  Future<List<Product>> getProductsByCategory(int categoryId) async {
+  Future<List<Product>> getProductsByCategory(
+    int categoryId, {
+    required int limit,
+    required int offset,
+  }) async {
     try {
       return _asList(
-        await remoteDataSource.getProductsByCategory(categoryId),
+        await remoteDataSource.getProductsByCategory(
+          categoryId,
+          limit: limit,
+          offset: offset,
+        ),
         'products',
       ).map((json) => ProductModel.fromJson(json).toEntity()).toList();
     } on DioException catch (error) {

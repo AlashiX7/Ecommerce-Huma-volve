@@ -6,6 +6,13 @@ class GetProductsByCategory {
 
   const GetProductsByCategory(this.repository);
 
-  Future<List<Product>> call(int categoryId) =>
-      repository.getProductsByCategory(categoryId);
+  Future<List<Product>> call(
+    int categoryId, {
+    required int limit,
+    required int offset,
+  }) => repository.getProductsByCategory(
+    categoryId,
+    limit: limit,
+    offset: offset,
+  );
 }

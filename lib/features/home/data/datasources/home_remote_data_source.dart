@@ -10,13 +10,25 @@ class HomeRemoteDataSource {
   Future<dynamic> getCategories() async =>
       (await dio.get(ApiEndpoints.categories)).data;
 
-  Future<dynamic> getProducts() async =>
-      (await dio.get(ApiEndpoints.products)).data;
+  Future<dynamic> getProducts({
+    required int limit,
+    required int offset,
+  }) async => (await dio.get(
+    ApiEndpoints.products,
+    queryParameters: {'limit': limit, 'offset': offset},
+  )).data;
 
-  Future<dynamic> getProductsByCategory(int categoryId) async {
+  Future<dynamic> getProductsByCategory(
+    int categoryId, {
+    required int limit,
+    required int offset,
+  }) async {
     if (categoryId <= 0) {
       throw ArgumentError.value(categoryId, 'categoryId');
     }
-    return (await dio.get(ApiEndpoints.categoryProducts(categoryId))).data;
+    return (await dio.get(
+      ApiEndpoints.categoryProducts(categoryId),
+      queryParameters: {'limit': limit, 'offset': offset},
+    )).data;
   }
 }
