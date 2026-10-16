@@ -45,6 +45,24 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
+  Future<Product> getProductById(int productId) async {
+    try {
+      final response = await remoteDataSource.getProductById(productId);
+      final value = response is Map<String, dynamic> && response['value'] is Map
+          ? response['value']
+          : response;
+      if (value is! Map) {
+        throw const FormatException('Unexpected product response format.');
+      }
+      return ProductModel.fromJson(Map<String, dynamic>.from(value)).toEntity();
+    } on DioException catch (error) {
+      throw _mapDioFailure(error);
+    } on FormatException {
+      throw const AppFailure(FailureType.unexpected);
+    }
+  }
+
+  @override
   Future<List<Product>> getProductsByCategory(
     int categoryId, {
     required int limit,

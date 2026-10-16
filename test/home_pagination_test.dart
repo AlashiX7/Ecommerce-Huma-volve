@@ -163,6 +163,9 @@ class _FakeHomeRepository implements HomeRepository {
   }) => fetchProducts(1, limit, offset);
 
   @override
+  Future<Product> getProductById(int productId) async => _product(productId);
+
+  @override
   Future<List<Product>> getProductsByCategory(
     int categoryId, {
     required int limit,

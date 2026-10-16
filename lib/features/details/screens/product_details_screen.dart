@@ -1,21 +1,73 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme.dart';
 import '../../home/domain/entities/product.dart';
+import '../cubit/product_details_cubit.dart';
+import '../cubit/product_details_states.dart';
+import '../widgets/share_product_button.dart';
 import '../widgets/color_selector.dart';
 import '../widgets/size_selector.dart';
 import '../../../core/widgets/primary_button.dart';
 
-class ProductDetailsScreen extends StatefulWidget {
-  final Product product;
+class ProductDetailsScreen extends StatelessWidget {
+  final int productId;
 
-  const ProductDetailsScreen({super.key, required this.product});
+  const ProductDetailsScreen({super.key, required this.productId});
 
   @override
-  State<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
+  Widget build(BuildContext context) {
+    return BlocBuilder<ProductDetailsCubit, ProductDetailsState>(
+      builder: (context, state) {
+        if (state is ProductDetailsSuccess) {
+          return _ProductDetailsView(product: state.product);
+        }
+        if (state is ProductDetailsError) {
+          return Scaffold(
+            backgroundColor: AppTheme.background,
+            appBar: AppBar(
+              backgroundColor: AppTheme.background,
+              title: const Text('Product details'),
+            ),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(state.message, textAlign: TextAlign.center),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () =>
+                          context.read<ProductDetailsCubit>().retry(),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+        return const Scaffold(
+          backgroundColor: AppTheme.background,
+          body: Center(child: CircularProgressIndicator()),
+        );
+      },
+    );
+  }
 }
 
-class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
+class _ProductDetailsView extends StatefulWidget {
+  final Product product;
+
+  const _ProductDetailsView({required this.product});
+
+  @override
+  State<_ProductDetailsView> createState() => _ProductDetailsViewState();
+}
+
+class _ProductDetailsViewState extends State<_ProductDetailsView> {
   late Color _selectedColor;
   late String _selectedSize;
 
@@ -45,9 +97,16 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 ),
                 child: const Icon(Icons.arrow_back_ios_new, size: 16),
               ),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/home');
+                }
+              },
             ),
             actions: [
+              ShareProductButton(productId: widget.product.id),
               IconButton(
                 icon: Container(
                   padding: const EdgeInsets.all(8),

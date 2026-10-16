@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#6c63ff">
+  <title>افتح المنتج في Huma Volve</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, #f7f5ff, #eef3ff);
+      color: #24213a;
+      font-family: Tahoma, Arial, sans-serif;
+      text-align: center;
+    }
+    main {
+      width: min(100%, 440px);
+      padding: 36px 28px;
+      border-radius: 24px;
+      background: #fff;
+      box-shadow: 0 18px 55px #302b571a;
+    }
+    .icon { font-size: 48px; }
+    h1 { margin: 16px 0 10px; font-size: 25px; }
+    p { margin: 0 0 24px; color: #68657a; line-height: 1.8; }
+    a {
+      display: inline-block;
+      padding: 14px 28px;
+      border-radius: 12px;
+      background: #6c63ff;
+      color: #fff;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    #status { min-height: 28px; margin-top: 18px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="icon" aria-hidden="true">🛍️</div>
+    <h1>عرض المنتج في Huma Volve</h1>
+    <p>اضغط على الزر لفتح صفحة المنتج داخل التطبيق.</p>
+    <a id="open-app" href="#">افتح التطبيق</a>
+    <div id="status" role="status" aria-live="polite">جارٍ محاولة فتح التطبيق...</div>
+  </main>
+  <script>
+    (() => {
+      const productId = window.location.pathname.match(/^\/products\/([^/]+)\/?$/)?.[1];
+      const status = document.getElementById('status');
+      const openButton = document.getElementById('open-app');
+
+      if (!productId || !/^\d+$/.test(productId) || Number(productId) < 1) {
+        document.querySelector('h1').textContent = 'رابط المنتج غير صالح';
+        document.querySelector('p').textContent = 'تحقق من الرابط وحاول مرة أخرى.';
+        openButton.hidden = true;
+        status.textContent = '';
+        return;
+      }
+
+      const appUrl = `humavolve://app/products/${encodeURIComponent(productId)}`;
+      openButton.href = appUrl;
+      window.location.href = appUrl;
+      window.setTimeout(() => {
+        status.textContent = 'إذا لم يفتح التطبيق تلقائيًا، استخدم الزر أعلاه.';
+      }, 1200);
+    })();
+  </script>
+</body>
+</html>

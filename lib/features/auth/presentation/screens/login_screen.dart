@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
@@ -7,7 +8,6 @@ import '../../../../core/theme.dart';
 import '../../../../core/errors/app_failure.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/usecases/login.dart';
-import '../../../main_navigation/screens/main_navigation_screen.dart';
 import 'sign_up_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -183,9 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => MainNavigationScreen()),
-      );
+      context.go('/home');
     } on AppFailure catch (failure) {
       if (!mounted) return;
 

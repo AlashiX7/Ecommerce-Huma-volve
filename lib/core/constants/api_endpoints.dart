@@ -6,6 +6,8 @@ class ApiEndpoints {
   static const categories = 'categories';
   static const products = 'products';
 
+  static String productDetails(int productId) => 'products/$productId';
+
   static String categoryProducts(int categoryId) =>
       'categories/$categoryId/products';
 }

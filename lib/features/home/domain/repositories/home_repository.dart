@@ -6,6 +6,8 @@ abstract interface class HomeRepository {
 
   Future<List<Product>> getProducts({required int limit, required int offset});
 
+  Future<Product> getProductById(int productId);
+
   Future<List<Product>> getProductsByCategory(
     int categoryId, {
     required int limit,
